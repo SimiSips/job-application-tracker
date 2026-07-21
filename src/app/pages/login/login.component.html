@@ -1,0 +1,27 @@
+<main class="container mt-5">
+    <h2 class="mb-4">Sign In</h2>
+
+    @if(errorMessage) {
+        <p class="alert alert-danger">{{ errorMessage }}</p>
+    }
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <section>
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" [(ngModel)]="email" required />
+        </section>
+
+        <section>
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" [(ngModel)]="password" required />
+        </section>
+
+        <button type="submit" class="btn btn-primary mt-3" [disabled]="isSubmitting || loginForm.invalid" >
+            {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+        </button>
+    </form>
+
+    <p class="mt-3 text-center">
+        Don't have an account <a routerLink="/signup">Sign Up</a>
+    </p>
+</main>

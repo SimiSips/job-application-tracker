@@ -1,0 +1,20 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <section class="container">
+    <a class="navbar-brand" routerLink="/">Job Tracker</a>
+    <section >
+
+    </section>
+
+    <section class="navbar-nav ms-auto">
+      @if(currentUser$ | async; as user) {
+        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+        <p class="nav-link text-light-emphasis">{{ user.email }}</p>
+        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <button (click)="logOut()" class="btn btn-outline-light btn-sml">Log Out</button>
+      } @else {
+        <a class="nav-link" routerLink="/login" routerLinkActive="active">Sign In</a>
+      }
+    </section>
+  </section>
+</nav>
+<router-outlet />

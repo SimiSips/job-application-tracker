@@ -1,0 +1,27 @@
+<main class="container mt-5">
+    <h2 class="mb-4">Create an Account</h2>
+
+    @if(errorMessage) {
+        <p class="alert alert-danger">{{ errorMessage }}</p>
+    }
+
+    <form (ngSubmit)="onSubmit()" #signUpForm="ngForm">
+        <section>
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" [(ngModel)]="email" required />
+        </section>
+
+        <section>
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" [(ngModel)]="password" required />
+        </section>
+
+        <button type="submit" class="btn btn-primary mt-3" [disabled]="isSubmitting || signUpForm.invalid" >
+            {{ isSubmitting ? 'Creating account...' : 'Create Account' }}
+        </button>
+    </form>
+
+    <p class="mt-3 text-center">
+        Already have an account <a routerLink="/login">Sign In</a>
+    </p>
+</main>
