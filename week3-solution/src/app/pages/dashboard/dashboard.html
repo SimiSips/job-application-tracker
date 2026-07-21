@@ -1,0 +1,104 @@
+<main class="container mt-4">
+  <section class="d-flex justify-content-between">
+    <h2>Dashboard</h2>
+    
+    @if(editedJob) {
+      <section class="gap-2 d-flex">
+        <button class="btn btn-danger" (click)="cancelJobEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveJob()">Save</button>
+      </section>
+    } @else if(editedUser) {
+      <section class="gap-2 d-flex">
+        <button class="btn btn-danger" (click)="cancelUserEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveUser()">Save</button>
+      </section>
+    } @else {
+      <section class="gap-2 d-flex">
+        <button class="btn btn-secondary" (click)="editUser()">Edit CV</button>
+        <button class="btn btn-primary" (click)="beginJobEdit()">Add Job</button>
+      </section>
+    }
+  </section>
+  
+@if(editedJob) {
+  <textarea class="form-control mt-2" rows="10" [(ngModel)]="editedJob.jobDescription" placeholder="Please enter the job description..." ></textarea>
+}
+
+  @if(editedUser) {
+    @if(editedUser | async;  as user) {
+      <textarea class="form-control mt-2" rows="10" [(ngModel)]="user.cv" placeholder="Please enter your CV..."></textarea>
+    } @else {
+      <p>Loading...</p>
+    }
+  } @else if(viewedJob) {
+    <table class="table table-striped mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>Company</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Updated At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr (click)="toggleDetails(viewedJob)">
+          <td>{{ viewedJob.company }}</td>
+          <td>{{ viewedJob.role }}</td>
+          <td><span class="badge bg-secondary">{{ getLatestJobUpdate(viewedJob).status }}</span></td>
+          <td>{{ getLatestJobUpdate(viewedJob).updatedAt | date:'medium' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Status</h3>
+    <hr />
+    @for(status of getStatuses(); track status) {
+      <section class="form-check form-check-inline">
+        <input type="radio" class="form-check-input" name="statusRadioOptions"
+          id="statusRadio{{ status }}"
+          [checked]="getLatestJobUpdate(viewedJob).status === status"
+          (change)="updateJobStatus(viewedJob, status)">
+        <label for="statusRadio{{ status }}" class="form-check-label">{{ status }}</label>
+      </section>
+    }
+
+    <h3 class="mt-3">Job Description</h3>
+    <hr />
+    <p>{{ viewedJob.jobDescription }}</p>
+
+    <h3>Cover Letter</h3>
+    <hr />
+    <markdown [data]="viewedJob.generatedCoverLetter || 'No cover letter gerenated yet'" ></markdown>
+
+    <h3>CV</h3>
+    <hr />
+    <markdown [data]="viewedJob.generatedCv || 'No CV generated yet'"></markdown>
+  } @else {
+    <table class="table table-striped mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>Company</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Updated At</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (job of jobs | async; track job.id) {
+          <tr (click)="toggleDetails(job)">
+            <td>{{ job.company }}</td>
+            <td>{{ job.role }}</td>
+            <td><span class="badge bg-secondary">{{ getLatestJobUpdate(job).status }}</span></td>
+            <td>{{ getLatestJobUpdate(job).updatedAt | date:'medium' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="text-center text-muted">
+              No jobs yet — click "Add Job" to create your first one.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</main>
