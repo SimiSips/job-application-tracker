@@ -36,6 +36,10 @@ export class Dashboard {
   }
 
   saveJob() {
+    this.editedJob!.jobUpdates = [{
+      status: JobStatus.NEW,
+      updatedAt: new Date()
+    }]
     this.jobService.addJob(this.editedJob!);
     this.editedJob = undefined;
     this.jobs = this.jobService.getJobs();

@@ -1,6 +1,5 @@
-import { initializeApp } from "firebase/app";
 import { Auth, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
-import { environment } from "../environment/environment";
+import { firebaseAuth } from '../firebase';
 import { Observable, shareReplay } from "rxjs";
 import { Injectable } from "@angular/core";
 
@@ -8,8 +7,7 @@ import { Injectable } from "@angular/core";
     providedIn: 'root'
 })
 export class AuthService {
-    private app = initializeApp(environment);
-    private auth: Auth = getAuth(this.app);
+    private auth: Auth = firebaseAuth
 
     currentUser$ = new Observable<User | null>((subscriber => {
         return onAuthStateChanged(this.auth, subscriber);

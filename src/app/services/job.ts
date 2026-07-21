@@ -1,51 +1,75 @@
 import { Injectable } from '@angular/core';
-import { Job, JobStatus } from '../models/job.model';
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  arrayUnion,
+  Timestamp,
+  DocumentData
+} from 'firebase/firestore';
+import { firestore, firebaseAuth} from '../firebase';
+import { Job, JobStatus, JobUpdate } from '../models/job.model';
 
 // When Firebase is added, inject Firestore here and replace the in-memory array
 // import { Firestore, collection, collectionData, addDoc } from '@angular/fire/firestore';
 
 @Injectable({ providedIn: 'root' })
 export class JobService {
-  private jobs: Job[] = [
-    {
-      id: '1',
-      company: 'ACME Corp',
-      role: 'Software Engineer',
-      jobDescription: 'Develop and maintain web applications.',
-      jobUpdates: [
-        { status: JobStatus.NEW, updatedAt: new Date('2024-01-01') },
-        { status: JobStatus.APPLIED, updatedAt: new Date('2024-01-02') }
-      ]
-    },
+  private db = firestore
 
-    {
-      id: '2',
-      company: 'Globex Corporation',
-      role: 'Frontend Developer',
-      jobDescription: 'Work on the user interface of our web applications.',
-      jobUpdates: [
-        { status: JobStatus.NEW, updatedAt: new Date('2024-02-01') },
-        { status: JobStatus.INTERVIEW, updatedAt: new Date('2024-02-05') }
-      ]
+  private jobsCollection() {
+    const uid = firebaseAuth.currentUser?.uid;
+
+    if (!uid) {
+      throw new Error('Cannot access jobs: No user is signed in.');
     }
-  ];
-
-  getJobs(): Promise<Job[]> {
-    return Promise.resolve(this.jobs);
+    return collection(this.db, 'users', uid, 'jobs'); //   user/{uid}/jobs
   }
 
-  addJob(job: Job): Promise<Job> {
-    this.jobs.push({ ...job, id: Date.now().toString(), role: 'Test Role', company: 'ACME Corp' });
-    return Promise.resolve(job);
+  async getJobs(): Promise<Job[]> {
+    const snapshot = await getDocs(this.jobsCollection());
+
+    return snapshot.docs.map((d) => this.toJob(d.id, d.data()));
   }
 
-  updateJobStatus(jobId: string, newStatus: JobStatus): Promise<Job | undefined> {
-    const job = this.jobs.find((j) => j.id === jobId);
-    if(job) {
-      job.jobUpdates.push({ updatedAt: new Date(), status: newStatus});
-      return Promise.resolve(job);
-    } else {
-      return Promise.resolve(undefined);
+  async addJob(job: Job): Promise<Job> {
+    const docRef = await addDoc(this.jobsCollection(), {
+      company: job.company ?? '',
+      role: job.role ?? '',
+      jobDescription: job.jobDescription ?? '',
+      jobUpdates: job.jobUpdates.map((u) => ({
+        status: u.status,
+        updatedAt: u.updatedAt,
+      }))
+    });
+    return { ...job, id: docRef.id}
+  }
+
+  async updateJobStatus(jobId: string, newStatus: JobStatus): Promise<Job | undefined> {
+    const uid = firebaseAuth.currentUser?.uid;
+    if (!uid) return undefined;
+
+    const jobRef = doc(this.db, 'users', uid, 'jobs', jobId)
+    await updateDoc(jobRef, {
+      jobUpdates: arrayUnion({ status: newStatus, updateAt: new Date()})
+    });
+    return undefined
+  }
+
+  private toJob(id: string, data: DocumentData): Job {
+    const jobUpdates: JobUpdate[] = (data['jobUpdates'] ?? []).map((u: any) => ({
+      status: u.status,
+      updatedAt: u.updatedAt instanceof Timestamp ? u.updatedAt.toDate() : u.updatedAt,
+    }));
+
+    return {
+      id,
+      company: data['company'],
+      role: data['role'],
+      jobDescription: data['jobDescription'] ?? '',
+      jobUpdates
     }
   }
 }
